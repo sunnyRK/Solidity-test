@@ -11,6 +11,7 @@ interface ICarStorage {
     function buyCar(address _newOwner, address _carAddress) external payable;
 }
 
+// CarInteraction contract is the owner of CarCore and it will entry point for any method.
 contract CarInteraction is Ownable {
     ICarStorage public iCarStorage;
     
@@ -21,15 +22,15 @@ contract CarInteraction is Ownable {
     function addNewCarByOwner(uint256 _price, bool _isSale) public onlyOwner {
         bytes memory bytecode = type(CarCore).creationCode;
         bytes32 salt = keccak256(abi.encodePacked(address(iCarStorage), block.timestamp));
-        address carAddress = Create2.deploy(0, salt, bytecode);
-        iCarStorage.addNewCar(msg.sender, carAddress, _price, _isSale);
+        address _carAddressId = Create2.deploy(0, salt, bytecode);
+        iCarStorage.addNewCar(msg.sender, _carAddressId, _price, _isSale);
     }
     
-    function updateCarSellAndPrice(address _carAddress, bool _isSale, uint256 _price) public {
-        iCarStorage.updateSellCar(msg.sender, _carAddress, _isSale, _price);
+    function updateCarSellAndPrice(address _carAddressId, bool _isSale, uint256 _price) public {
+        iCarStorage.updateSellCar(msg.sender, _carAddressId, _isSale, _price);
     }
     
-    function buyCarByAnyUser(address _carAddress) public payable {
-        iCarStorage.buyCar{value: msg.value}(msg.sender, _carAddress);
+    function buyCarByAnyUser(address _carAddressId) public payable {
+        iCarStorage.buyCar{value: msg.value}(msg.sender, _carAddressId);
     }
 }

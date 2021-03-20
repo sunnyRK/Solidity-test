@@ -4,6 +4,9 @@ import "@openzeppelin/contracts/utils/EnumerableSet.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
+// CarCore contract's method will be call through CarInteraction contract
+// CarInteraction contract is the owner of CarCore and it will entry point for any method.
+
 contract CarCore is Ownable{
     using SafeMath for uint256;
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -15,16 +18,16 @@ contract CarCore is Ownable{
     
     struct CarRecord {
         uint256 carPrice;
-        address carAddressID;
         bool isForSale;
+        address carAddressID;
     }
     
     struct CarSellReciept {
-        address oldOwner;
-        address newOwner;
         uint256 recieptNonce;
         uint256 price;
         uint256 timeStamp;
+        address oldOwner;
+        address newOwner;
         address carId;
     }
     
@@ -38,6 +41,7 @@ contract CarCore is Ownable{
     // carId => TotalNonce
     mapping(address => uint256) public totalNonce;
     
+    // New car will be add by CarInteraction contract(Owner)
     function addNewCar(address _admin, address _carAddressId, uint256 _price, bool _isSale) public onlyOwner returns(address) {
         require(contains(_admin, _carAddressId) == false, "ALready car added");
         
@@ -55,6 +59,7 @@ contract CarCore is Ownable{
         return _carAddressId;
     }
     
+    // Only owner of car can change the details
     function updateSellCar(address _owner, address _carAddressId, bool _isSale, uint256 _price) public onlyOwner {
         require(contains(_owner, _carAddressId), "Not owner");
         
@@ -62,6 +67,7 @@ contract CarCore is Ownable{
         carRecordMapping[_carAddressId].carPrice = _price;
     } 
     
+    // Buy car will be call by buyer
     function buyCar(address _newOwner, address _carAddressId) public payable {
         require(carRecordMapping[_carAddressId].isForSale, "Not For sale");
         require(carRecordMapping[_carAddressId].carPrice <= msg.value, "Price is not right");
@@ -98,8 +104,8 @@ contract CarCore is Ownable{
         return _carHolders[addr].at(index);
     }
     
-    function contains(address addr, address _carAddress) public view returns(bool){
-        return _carHolders[addr].contains(_carAddress);
+    function contains(address addr, address _carAddressId) public view returns(bool){
+        return _carHolders[addr].contains(_carAddressId);
     }
     
     function balance(address addr) public view returns(uint256) {
